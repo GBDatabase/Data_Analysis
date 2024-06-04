@@ -1,0 +1,228 @@
+```javascript
+/*
+### 명령1: 출력해야하는것은 3가지야 ###
+1. 하나의 코드블럭안에 모든 내용을 넣은것
+2. 마지막에 확장자에 따른 파일들을 구분지어서 모두 출력해주세요.
+3. 총정리 md형식으로 출력: 목차를 만들고 사용한 라이브러리나 함수나...파일을 구분해 준다거나 같이 내가 발표하는데 도움이 되는 내용들을 적어줘
+4. 위 1번,2번,3번은 모두 복사가능하게 코드블럭으로 넣어주세요.
+
+###명령2: part(대분류)와 step(코드앞의 주석)이 잘 구분되어있어야 해.###
+만약 part도 step도 없다면 너가 만들어서 줘야해
+
+###명령3: 개발자가 아닌 투자자가 봐도 괜찮을 정도로 이 문장이 무엇을 의미하는지에 대한 설명을 코드옆에 주석으로 많이 달아야해###
+*/
+
+///////////////////////////////////////////////////////////////////
+// part 1: shop.js - API들을 다른 파일로 분리
+const router = require('express').Router();
+
+router.get('/shop/shirts', (req, res) => { // '셔츠 파는 페이지입니다'를 보내는 GET 요청 API
+   res.send('셔츠 파는 페이지입니다');
+});
+
+router.get('/shop/pants', (req, res) => { // '바지 파는 페이지입니다'를 보내는 GET 요청 API
+   res.send('바지 파는 페이지입니다');
+});
+
+module.exports = router; // router를 모듈로 내보내서 다른 파일에서 사용할 수 있게 함
+
+///////////////////////////////////////////////////////////////////
+// part 2: server.js - 분리된 API 파일을 불러와서 사용
+const express = require('express');
+const app = express();
+const shopRoutes = require('./routes/shop.js'); // 분리된 API 파일 불러오기
+
+app.use('/', shopRoutes); // '/' 경로에서 shopRoutes 사용
+
+app.listen(process.env.PORT || 3000, () => { // 서버 실행
+   console.log('http://localhost:3000 에서 서버 실행 중');
+});
+
+///////////////////////////////////////////////////////////////////
+// part 3: shop.js - 공통된 URL 단축
+const router = require('express').Router();
+
+router.get('/shirts', (req, res) => { // '셔츠 파는 페이지입니다'를 보내는 GET 요청 API
+   res.send('셔츠 파는 페이지입니다');
+});
+
+router.get('/pants', (req, res) => { // '바지 파는 페이지입니다'를 보내는 GET 요청 API
+   res.send('바지 파는 페이지입니다');
+});
+
+module.exports = router; // router를 모듈로 내보내서 다른 파일에서 사용할 수 있게 함
+
+///////////////////////////////////////////////////////////////////
+// part 4: server.js - 단축된 공통 URL 사용
+const express = require('express');
+const app = express();
+const shopRoutes = require('./routes/shop.js'); // 분리된 API 파일 불러오기
+
+app.use('/shop', shopRoutes); // '/shop' 경로에서 shopRoutes 사용
+
+app.listen(process.env.PORT || 3000, () => { // 서버 실행
+   console.log('http://localhost:3000 에서 서버 실행 중');
+});
+
+///////////////////////////////////////////////////////////////////
+// part 5: database.js - DB 연결 코드 분리
+const { MongoClient } = require('mongodb');
+const url = 'DB연결URL~~';
+let connectDB = new MongoClient(url).connect(); // DB 연결 설정
+
+module.exports = connectDB; // connectDB를 모듈로 내보내서 다른 파일에서 사용할 수 있게 함
+
+///////////////////////////////////////////////////////////////////
+// part 6: server.js - 분리된 DB 연결 코드 사용
+const express = require('express');
+const app = express();
+const shopRoutes = require('./routes/shop.js'); // 분리된 API 파일 불러오기
+let connectDB = require('./database.js'); // 분리된 DB 연결 코드 불러오기
+
+let db;
+connectDB.then((client) => { // DB 연결 성공 시 콜백 함수
+   console.log('DB 연결 성공');
+   db = client.db('forum'); // forum 데이터베이스 사용
+   app.listen(process.env.PORT || 3000, () => { // 서버 실행
+      console.log('http://localhost:3000 에서 서버 실행 중');
+   });
+}).catch((err) => { // DB 연결 실패 시 에러 처리
+   console.log(err);
+});
+
+app.use('/shop', shopRoutes); // '/shop' 경로에서 shopRoutes 사용
+
+///////////////////////////////////////////////////////////////////
+// part 7: shop.js - 분리된 DB 연결 코드 사용
+const router = require('express').Router();
+let connectDB = require('./../database.js'); // 분리된 DB 연결 코드 불러오기
+
+let db;
+connectDB.then((client) => { // DB 연결 성공 시 콜백 함수
+   console.log('DB 연결 성공');
+   db = client.db('forum'); // forum 데이터베이스 사용
+}).catch((err) => { // DB 연결 실패 시 에러 처리
+   console.log(err);
+});
+
+router.get('/shirts', (req, res) => { // '셔츠 파는 페이지입니다'를 보내는 GET 요청 API
+   res.send('셔츠 파는 페이지입니다');
+});
+
+router.get('/pants', (req, res) => { // '바지 파는 페이지입니다'를 보내는 GET 요청 API
+   res.send('바지 파는 페이지입니다');
+});
+
+module.exports = router; // router를 모듈로 내보내서 다른 파일에서 사용할 수 있게 함
+
+///////////////////////////////////////////////////////////////////
+// part 8: shop.js - 라우터 파일에만 미들웨어 등록
+const router = require('express').Router();
+
+function checkLogin(req, res, next) { // 로그인 여부를 확인하는 미들웨어 함수
+   if (req.user) {
+      next(); // 로그인 되어 있으면 다음 미들웨어로 넘어감
+   } else {
+      res.send('로그인 필요'); // 로그인 안되어 있으면 '로그인 필요' 메시지 전송
+   }
+}
+
+router.use(checkLogin); // 모든 라우트에 대해 checkLogin 미들웨어 적용
+
+router.get('/shirts', (req, res) => { // '셔츠 파는 페이지입니다'를 보내는 GET 요청 API
+   res.send('셔츠 파는 페이지입니다');
+});
+
+router.get('/pants', (req, res) => { // '바지 파는 페이지입니다'를 보내는 GET 요청 API
+   res.send('바지 파는 페이지입니다');
+});
+
+module.exports = router; // router를 모듈로 내보내서 다른 파일에서 사용할 수 있게 함
+
+///////////////////////////////////////////////////////////////////
+// Q1. 하단과 같은 API를 server.js에 만들어놓고 다른 파일로 빼봅시다.
+const router = require('express').Router();
+function checkLogin(req, res, next) { // 로그인 여부를 확인하는 미들웨어 함수
+   if (req.user) {
+      next(); // 로그인 되어 있으면 다음 미들웨어로 넘어감
+   } else {
+      res.send('로그인 필요'); // 로그인 안되어 있으면 '로그인 필요' 메시지 전송
+   }
+}
+
+router.get('/board/sub/sports', checkLogin, (req, res) => { // '스포츠 게시판'을 보내는 GET 요청 API
+   res.send('스포츠 게시판');
+});
+router.get('/board/sub/game', checkLogin, (req, res) => { // '게임 게시판'을 보내는 GET 요청 API
+   res.send('게임 게시판');
+});
+
+module.exports = router; // router를 모듈로 내보내서 다른 파일에서 사용할 수 있게 함
+
+///////////////////////////////////////////////////////////////////
+// Q2. 글 발행, 수정, 삭제하는 기능들도 심심하면 router로 분리해봅시다.
+const router = require('express').Router();
+
+router.post('/post', (req, res) => { // 글 발행 API
+   res.send('글 발행');
+});
+
+router.put('/post/:id', (req, res) => { // 글 수정 API
+   res.send('글 수정');
+});
+
+router.delete('/post/:id', (req, res) => { // 글 삭제 API
+   res.send('글 삭제');
+});
+
+module.exports = router; // router를 모듈로 내보내서 다른 파일에서 사용할 수 있게 함
+
+///////////////////////////////////////////////////////////////////
+
+### 확장자에 따른 파일 구분 ###
+
+#### JavaScript 파일 ####
+- shop.js
+- server.js
+- database.js
+
+#### 총정리 md형식 ####
+
+# API 분리 및 라우터 사용 가이드
+
+## 목차
+1. API 분리의 필요성
+2. API 보관용 폴더와 파일 만들기
+3. 분리된 API 파일 사용하기
+4. 공통된 시작 URL 단축하기
+5. 라우터 파일에서 DB 변수 사용하기
+6. 라우터 파일에만 미들웨어 등록하기
+7. 연습 문제
+
+## 1. API 분리의 필요성
+API를 한 파일에 모두 작성하면 코드가 길어지고 관리가 어려워지므로, 기능별로 파일을 분리하여 관리하는 것이 좋습니다.
+
+## 2. API 보관용 폴더와 파일 만들기
+- `routes` 폴더를 만들고, API를 정의할 파일을 생성합니다.
+
+## 3. 분리된 API 파일 사용하기
+- `server.js` 파일에서 분리된 API 파일을 불러와 사용합니다.
+
+## 4. 공통된 시작 URL 단축하기
+- 공통된 URL 부분을 `server.js`에서 설정하여 코드 중복을 줄입니다.
+
+## 5.
+
+ 라우터 파일에서 DB 변수 사용하기
+- DB 연결 코드를 별도 파일로 분리하여 관리하고, 필요한 파일에서 불러와 사용합니다.
+
+## 6. 라우터 파일에만 미들웨어 등록하기
+- 특정 라우터 파일에만 적용할 미들웨어를 설정하여 효율적으로 관리합니다.
+
+## 7. 연습 문제
+- 주어진 API를 다른 파일로 분리해보고, 글 발행, 수정, 삭제 기능을 라우터로 분리해보는 연습을 합니다.
+
+## 사용한 라이브러리
+- express: 웹 서버를 구축하기 위해 사용
+- mongodb: MongoDB 데이터베이스와 연결하기 위해 사용
+```
