@@ -9,7 +9,7 @@ plt.rcParams['font.family'] = 'Malgun Gothic'  # '맑은 고딕' 글꼴 사용
 plt.rcParams['axes.unicode_minus'] = False  # 마이너스 기호 깨짐 방지
 
 # [STEP 1] YouTube API를 사용하여 데이터 수집
-API_KEY = 'AIzaSyB8P9lxLt3EUDnr2sKYpnQoOjcZmNaVOnE'  # 자신의 유효한 API 키를 입력
+API_KEY = '나의 API키'  # 자신의 유효한 API 키를 입력
 CHANNEL_ID = 'UCUj6rrhMTR9pipbAWBAMvUQ'  # 분석할 채널의 ID를 입력
 
 # YouTube API 클라이언트 빌드
